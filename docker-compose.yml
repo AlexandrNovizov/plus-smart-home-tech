@@ -53,3 +53,9 @@ services:
     #      - postgres:/data/postgres
     ports:
       - "5432:5432"
+
+  collector:
+    build: telemetry/collector
+    container-name: collector
+    ports:
+      - "8080:8080"
