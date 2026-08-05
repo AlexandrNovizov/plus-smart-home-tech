@@ -1,8 +1,8 @@
 package ru.yandex.practicum.telemetry.dto.event.hub;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
 @Getter
 @Setter
@@ -12,7 +12,7 @@ import lombok.*;
 public class ScenarioRemovedEvent extends HubEvent {
 
     @NotBlank
-    @Min(value = 3, message = "name length should be > 3")
+    @Length(min = 3, message = "name length should be > 3")
     private String name;
 
     @Override
