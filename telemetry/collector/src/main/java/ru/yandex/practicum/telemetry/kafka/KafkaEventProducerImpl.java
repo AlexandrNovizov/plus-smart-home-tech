@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
+import java.time.Duration;
+
 @Service
 @RequiredArgsConstructor
 public class KafkaEventProducerImpl implements KafkaEventProducer {
@@ -26,7 +28,7 @@ public class KafkaEventProducerImpl implements KafkaEventProducer {
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
                 HUB_TOPIC,
                 null,
-                hubEventAvro.getTimestamp().getEpochSecond(),
+                hubEventAvro.getTimestamp().toEpochMilli(),
                 hubEventAvro.getHubId(),
                 hubEventAvro
         );
@@ -38,7 +40,7 @@ public class KafkaEventProducerImpl implements KafkaEventProducer {
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
                 SENSOR_TOPIC,
                 null,
-                sensorEventAvro.getTimestamp().getEpochSecond(),
+                sensorEventAvro.getTimestamp().toEpochMilli(),
                 sensorEventAvro.getHubId(),
                 sensorEventAvro
         );
@@ -48,6 +50,7 @@ public class KafkaEventProducerImpl implements KafkaEventProducer {
     @Override
     @PreDestroy
     public void close() {
-        producer.close();
+        producer.flush();
+        producer.close(Duration.ofSeconds(10));
     }
 }
