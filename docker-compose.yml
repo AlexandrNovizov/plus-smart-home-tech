@@ -53,3 +53,13 @@ services:
     #      - postgres:/data/postgres
     ports:
       - "5432:5432"
+
+  collector:
+    build: telemetry/collector
+    container_name: collector
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: 'kafka:29092'
+      SENSOR_EVENT_TOPIC_NAME: 'telemetry.sensors.v1'
+      HUB_EVENT_TOPIC_NAME: 'telemetry.hubs.v1'
