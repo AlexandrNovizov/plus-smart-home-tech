@@ -11,6 +11,6 @@ import "google/protobuf/empty.proto";
 
 
 service CollectorController {
-  rpc CollectServiceEvent (telemetry.message.event.SensorEventProto) returns (google.protobuf.Empty);
+  rpc CollectSensorEvent (telemetry.message.event.SensorEventProto) returns (google.protobuf.Empty);
   rpc CollectHubEvent (telemetry.message.event.HubEventProto) returns (google.protobuf.Empty);
 }
