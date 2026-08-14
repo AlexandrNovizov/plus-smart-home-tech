@@ -58,8 +58,9 @@ services:
     build: telemetry/collector
     container_name: collector
     ports:
-      - "8080:8080"
+      - "59091:59091"
     environment:
       KAFKA_BOOTSTRAP_SERVER: 'kafka:29092'
       SENSOR_EVENT_TOPIC_NAME: 'telemetry.sensors.v1'
       HUB_EVENT_TOPIC_NAME: 'telemetry.hubs.v1'
+      GRPC_SERVER_PORT: 59091
