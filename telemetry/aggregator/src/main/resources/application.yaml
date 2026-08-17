@@ -1,0 +1,17 @@
+kafka:
+  bootstrap:
+    server: 'localhost:9092'
+
+sensor:
+  event:
+    topic:
+      name: 'telemetry.sensors.v1'
+
+telemetry:
+  snapshot:
+    topic:
+      name: 'telemetry.snapshots.v1'
+
+consumer:
+  group:
+    id: 'group-1'
