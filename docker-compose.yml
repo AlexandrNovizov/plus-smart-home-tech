@@ -60,16 +60,25 @@ services:
     ports:
       - "59091:59091"
     environment:
-      KAFKA_BOOTSTRAP_SERVER: 'kafka:29092'
-      SENSOR_EVENT_TOPIC_NAME: 'telemetry.sensors.v1'
-      HUB_EVENT_TOPIC_NAME: 'telemetry.hubs.v1'
+      KAFKA_PROPERTIES_BOOTSTRAP_SERVERS: 'kafka:29092'
+      SENSOR_EVENT_TOPIC: 'telemetry.sensors.v1'
+      HUB_EVENT_TOPIC: 'telemetry.hubs.v1'
       GRPC_SERVER_PORT: 59091
 
   aggregator:
     build: telemetry/aggregator
     container_name: aggregator
     environment:
-      KAFKA_BOOTSTRAP_SERVER: 'kafka:29092'
-      SENSOR_EVENT_TOPIC_NAME: 'telemetry.sensors.v1'
-      TELEMETRY_SNAPSHOT_TOPIC_NAME: 'telemetry.snapshots.v1'
-      CONSUMER_GROUP_ID: 'group-1'
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 'kafka:29092'
+      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: 'kafka:29092'
+      KAFKA_CONSUMER_GROUP_ID: 'aggregator-1'
+      SENSOR_EVENT_TOPIC: 'telemetry.sensors.v1'
+      SNAPSHOT_TOPIC: 'telemetry.snapshots.v1'
+
+  analyzer:
+    build: telemetry/analyzer
+    container_name: analyzer
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/telemetry_analyzer
+      SPRING_DATASOURCE_USERNAME: dbuser
+      SPRING_DATASOURCE_PASSWORD: 12345

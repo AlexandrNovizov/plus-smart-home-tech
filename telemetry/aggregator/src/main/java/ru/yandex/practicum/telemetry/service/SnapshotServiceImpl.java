@@ -1,5 +1,6 @@
 package ru.yandex.practicum.telemetry.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorStateAvro;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class SnapshotServiceImpl implements SnapshotService {
 
@@ -28,9 +30,11 @@ public class SnapshotServiceImpl implements SnapshotService {
         Map<String, SensorStateAvro> sensorsState = lastHubSnapshot.getSensorsState();
 
         if (isStateUpToDate(sensorsState, event)) {
+            log.info("Snapshot data is up to date");
             return Optional.empty();
         }
 
+        log.info("Data is changed, creating new snapshot");
         SensorStateAvro sensorState = SensorStateAvro.newBuilder()
                 .setTimestamp(event.getTimestamp())
                 .setData(event.getPayload())

@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
+import ru.yandex.practicum.telemetry.KafkaConfig;
 
 import java.time.Duration;
 
@@ -17,16 +17,15 @@ import java.time.Duration;
 public class KafkaEventProducerImpl implements KafkaEventProducer {
 
     private final Producer<String, SpecificRecordBase> producer;
+    private final KafkaConfig kafkaConfig;
 
-    @Value("${hub.event.topic.name}")
-    private String HUB_TOPIC;
-    @Value("${sensor.event.topic.name}")
-    private String SENSOR_TOPIC;
+    private static final String HUB_TOPIC = "hub.event";
+    private static final String SENSOR_TOPIC = "sensor.event";
 
     @Override
     public void send(HubEventAvro hubEventAvro) {
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                HUB_TOPIC,
+                kafkaConfig.getTopics().getProperty(HUB_TOPIC),
                 null,
                 hubEventAvro.getTimestamp().toEpochMilli(),
                 hubEventAvro.getHubId(),
@@ -38,7 +37,7 @@ public class KafkaEventProducerImpl implements KafkaEventProducer {
     @Override
     public void send(SensorEventAvro sensorEventAvro) {
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                SENSOR_TOPIC,
+                kafkaConfig.getTopics().getProperty(SENSOR_TOPIC),
                 null,
                 sensorEventAvro.getTimestamp().toEpochMilli(),
                 sensorEventAvro.getHubId(),

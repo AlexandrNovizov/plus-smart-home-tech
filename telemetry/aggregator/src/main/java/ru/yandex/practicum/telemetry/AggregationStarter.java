@@ -25,22 +25,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AggregationStarter {
 
-    @Value("${sensor.event.topic.name}")
-    private String SENSOR_TOPIC;
-
-    @Value("${telemetry.snapshot.topic.name}")
-    private String SNAPSHOT_TOPIC;
-
     private final Producer<String, SpecificRecordBase> producer;
     private final Consumer<String, SpecificRecordBase> consumer;
     private final SnapshotService snapshotService;
+    private final KafkaConfig kafkaConfig;
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
     private static final Duration POLL_TIMEOUT = Duration.ofSeconds(5);
+    private static final String SENSOR_EVENT_TOPIC_KEY = "sensor.event";
+    private static final String SNAPSHOT_EVENT_TOPIC_KEY = "snapshot";
 
     public void start() {
         try {
-            consumer.subscribe(List.of(SENSOR_TOPIC));
+            consumer.subscribe(List.of(kafkaConfig.getTopics().getProperty(SENSOR_EVENT_TOPIC_KEY)));
 
             while (true) {
                 ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(POLL_TIMEOUT);
@@ -50,7 +47,7 @@ public class AggregationStarter {
                     optSnapshot.ifPresent(
                             snapshot -> {
                                 ProducerRecord<String, SpecificRecordBase> snapshotRecord = new ProducerRecord<>(
-                                        SNAPSHOT_TOPIC,
+                                        kafkaConfig.getTopics().getProperty(SNAPSHOT_EVENT_TOPIC_KEY),
                                         null,
                                         Instant.now().toEpochMilli(),
                                         snapshot.getHubId(),
