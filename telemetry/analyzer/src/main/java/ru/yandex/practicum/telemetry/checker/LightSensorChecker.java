@@ -15,7 +15,7 @@ public class LightSensorChecker extends BaseChecker<LightSensorAvro> {
     }
 
     @Override
-    protected LightSensorAvro castToAvro(SpecificRecordBase data) {
+    protected LightSensorAvro castToAvro(Object data) {
         try {
             return (LightSensorAvro) data;
         } catch (ClassCastException e) {

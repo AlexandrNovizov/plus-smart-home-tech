@@ -15,7 +15,7 @@ public class SwitchSensorChecker extends BaseChecker<SwitchSensorAvro> {
     }
 
     @Override
-    protected SwitchSensorAvro castToAvro(SpecificRecordBase data) {
+    protected SwitchSensorAvro castToAvro(Object data) {
         try {
             return (SwitchSensorAvro) data;
         } catch (ClassCastException e) {

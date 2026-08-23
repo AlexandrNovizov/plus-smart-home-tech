@@ -15,11 +15,11 @@ public class ClimateSensorChecker extends BaseChecker<ClimateSensorAvro> {
     }
 
     @Override
-    protected ClimateSensorAvro castToAvro(SpecificRecordBase data) {
+    protected ClimateSensorAvro castToAvro(Object data) {
         try {
             return (ClimateSensorAvro) data;
         } catch (ClassCastException e) {
-            throw new IllegalArgumentException("Cannot cast data in " + getClass() + ": " + data);
+            throw new IllegalArgumentException("Can't cast data in " + getClass() + ": " + data);
         }
     }
 

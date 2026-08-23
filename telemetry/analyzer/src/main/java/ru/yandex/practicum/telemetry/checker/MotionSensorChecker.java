@@ -15,7 +15,7 @@ public class MotionSensorChecker extends BaseChecker<MotionSensorAvro> {
     }
 
     @Override
-    protected MotionSensorAvro castToAvro(SpecificRecordBase data) {
+    protected MotionSensorAvro castToAvro(Object data) {
         try {
             return (MotionSensorAvro) data;
         } catch (ClassCastException e) {

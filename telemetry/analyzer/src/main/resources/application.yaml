@@ -24,8 +24,14 @@ kafka:
     "value.deserializer": "ru.yandex.practicum.telemetry.kafka.SensorsSnapshotDeserializer"
     "group.id": "analyzer-1"
     "enable.auto.commit": "false"
+  hub:
+    "bootstrap.servers": "localhost:9092"
+    "key.deserializer": "org.apache.kafka.common.serialization.StringDeserializer"
+    "value.deserializer": "ru.yandex.practicum.telemetry.kafka.HubEventDeserializer"
+    "group.id": "analyzer-1"
   topics:
     "snapshot": '${SNAPSHOT_TOPIC:telemetry.snapshots.v1}'
+    "hub.event": "${HUB_EVENT_TOPIC:telemetry.hubs.v1}"
 
 grpc:
   client:
@@ -34,3 +40,7 @@ grpc:
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: plaintext
+
+logging:
+  level:
+    ru.yandex.practicum.telemetry: TRACE

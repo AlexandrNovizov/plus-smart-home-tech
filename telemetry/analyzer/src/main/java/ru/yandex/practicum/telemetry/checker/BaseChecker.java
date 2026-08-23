@@ -10,7 +10,7 @@ import ru.yandex.practicum.telemetry.model.ConditionType;
 
 public abstract class BaseChecker<T extends SpecificRecordBase> implements Checker {
     @Override
-    public boolean checkCondition(SpecificRecordBase state, Condition condition) {
+    public boolean checkCondition(Object state, Condition condition) {
         BaseCheck<?> check;
         T specificState = castToAvro(state);
         switch (condition.getType()) {
@@ -40,7 +40,7 @@ public abstract class BaseChecker<T extends SpecificRecordBase> implements Check
         return check.check(condition);
     }
 
-    abstract protected T castToAvro(SpecificRecordBase data);
+    abstract protected T castToAvro(Object data);
 
     @Override
     public abstract DeviceTypeAvro getDeviceType();

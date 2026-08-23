@@ -1,7 +1,6 @@
 package ru.yandex.practicum.telemetry.processor;
 
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -44,18 +43,18 @@ public class SnapshotProcessor implements Runnable {
         try {
             snapshotConsumer.subscribe(List.of(kafkaConfig.getTopics().getProperty(SNAPSHOT_TOPIC_KEY)));
 
-            try {
-                while (true) {
-                    ConsumerRecords<String, SpecificRecordBase> records = snapshotConsumer.poll(POLL_TIMEOUT);
+            while (true) {
+                ConsumerRecords<String, SpecificRecordBase> records = snapshotConsumer.poll(POLL_TIMEOUT);
 
-                    for (ConsumerRecord<String, SpecificRecordBase> record : records) {
+                for (ConsumerRecord<String, SpecificRecordBase> record : records) {
+                    try {
                         SensorsSnapshotAvro snapshot = (SensorsSnapshotAvro) record.value();
                         snapshotService.processSnapshot(snapshot);
+                    } catch (Exception e) {
+                        log.error("Error while working with consumer: {}", e.getMessage());
                     }
-                    snapshotConsumer.commitAsync();
                 }
-            } catch (Exception e) {
-                log.error("Error while working with consumer: {}", e.getMessage());
+                snapshotConsumer.commitAsync();
             }
 
         } catch (Exception e) {

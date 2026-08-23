@@ -6,7 +6,7 @@ import ru.yandex.practicum.telemetry.model.Condition;
 
 public interface Checker {
 
-    boolean checkCondition(SpecificRecordBase state, Condition condition);
+    boolean checkCondition(Object state, Condition condition);
 
     DeviceTypeAvro getDeviceType();
 }

@@ -82,6 +82,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/telemetry_analyzer
       SPRING_DATASOURCE_USERNAME: dbuser
       SPRING_DATASOURCE_PASSWORD: 12345
-      KAFKA_PROPERTIES_BOOTSTRAP_SERVERS: 'kafka:29092'
-      SNAPSHOT_TOPIC: 'telemetry.snapshots.v1'
+      KAFKA_SNAPSHOTS_BOOTSTRAP_SERVERS: 'kafka:29092'
+      KAFKA_HUB_BOOTSTRAP_SERVERS: 'kafka:29092'
+      KAFKA_TOPICS_SNAPSHOT: 'telemetry.snapshots.v1'
+      KAFKA_TOPICS_HUB_EVENT: 'telemetry.hubs.v1'
       KAFKA_PROPERTIES_GROUP_ID: 'analyzer-1'

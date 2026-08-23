@@ -15,7 +15,7 @@ public class TemperatureSensorChecker extends BaseChecker<TemperatureSensorAvro>
     }
 
     @Override
-    protected TemperatureSensorAvro castToAvro(SpecificRecordBase data) {
+    protected TemperatureSensorAvro castToAvro(Object data) {
         try {
             return (TemperatureSensorAvro) data;
         } catch (ClassCastException e) {

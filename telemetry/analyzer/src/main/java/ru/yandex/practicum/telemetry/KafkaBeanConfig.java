@@ -17,4 +17,9 @@ public class KafkaBeanConfig {
     public Consumer<String, SpecificRecordBase> snapshotConsumer() {
         return new KafkaConsumer<>(kafkaConfig.getSnapshots());
     }
+
+    @Bean(name = "hubConsumer")
+    public Consumer<String, SpecificRecordBase> hubConsumer() {
+        return new KafkaConsumer<>(kafkaConfig.getHub());
+    }
 }

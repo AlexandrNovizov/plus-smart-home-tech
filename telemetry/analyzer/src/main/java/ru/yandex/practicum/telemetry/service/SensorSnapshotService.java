@@ -3,8 +3,8 @@ package ru.yandex.practicum.telemetry.service;
 import com.google.protobuf.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.grpc.telemetry.event.DeviceActionProto;
 import ru.yandex.practicum.grpc.telemetry.event.DeviceActionRequest;
 import ru.yandex.practicum.grpc.telemetry.hubrouter.HubRouterControllerGrpc;
@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional
 public class SensorSnapshotService implements SnapshotService<SensorsSnapshotAvro> {
 
     private final ScenarioRepository scenarioRepository;
@@ -46,11 +47,14 @@ public class SensorSnapshotService implements SnapshotService<SensorsSnapshotAvr
     public void processSnapshot(SensorsSnapshotAvro snapshot) {
         List<Scenario> scenarios = scenarioRepository.findByHubId(snapshot.getHubId());
 
-        List<Scenario> passedScenarios = scenarios.stream()
+        List<Long> passedIds = scenarios.stream()
                 .filter(scenario -> processConditions(scenario, snapshot))
+                .map(Scenario::getId)
                 .toList();
 
-        passedScenarios
+        List<Scenario> byIdsInAndActions = scenarioRepository.findByIdIn(passedIds);
+
+        byIdsInAndActions
                 .forEach(this::processActions);
     }
 
@@ -63,7 +67,7 @@ public class SensorSnapshotService implements SnapshotService<SensorsSnapshotAvr
             }
 
             boolean checkResult = checkers.get(deduceType(sensorState.getData()))
-                    .checkCondition(sensorState, scenario.getConditions().get(sensorId));
+                    .checkCondition(sensorState.getData(), scenario.getConditions().get(sensorId));
 
             if (!checkResult) {
                 return false;
@@ -93,7 +97,11 @@ public class SensorSnapshotService implements SnapshotService<SensorsSnapshotAvr
                     )
                     .build();
 
-            hubRouterClient.handleDeviceAction(request);
+            try {
+                hubRouterClient.handleDeviceAction(request);
+            } catch (Exception e) {
+                log.error("Error while sending gRPC action: {}", e.getMessage());
+            }
         }
     }
 
