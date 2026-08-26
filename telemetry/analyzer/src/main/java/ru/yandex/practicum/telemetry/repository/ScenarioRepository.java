@@ -7,6 +7,7 @@ import ru.yandex.practicum.telemetry.model.Scenario;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
@@ -14,5 +15,7 @@ public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
     List<Scenario> findByHubId(String hubId);
     @EntityGraph(attributePaths = {"actions"}, type = EntityGraph.EntityGraphType.FETCH)
     List<Scenario> findByIdIn(Collection<Long> ids);
+    @EntityGraph(attributePaths = {"conditions", "actions"}, type = EntityGraph.EntityGraphType.LOAD)
+    Optional<Scenario> findByHubIdAndName(String hubId, String name);
     void deleteByHubIdAndName(String hubId, String name);
 }

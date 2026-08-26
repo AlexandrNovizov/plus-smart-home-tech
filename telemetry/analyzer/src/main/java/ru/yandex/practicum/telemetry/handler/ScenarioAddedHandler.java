@@ -16,6 +16,7 @@ import ru.yandex.practicum.telemetry.repository.ConditionRepository;
 import ru.yandex.practicum.telemetry.repository.ScenarioRepository;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -31,7 +32,16 @@ public class ScenarioAddedHandler implements Handler {
 
         Map<String, Action> actions = AvroToActionMapper.toEntity(scenarioAdded.getActions());
 
-        Scenario scenario = AvroToScenarioMapper.mapToEntity(event.getHubId(), scenarioAdded, conditions, actions);
+        Optional<Scenario> savedScenario = scenarioRepository.findByHubIdAndName(event.getHubId(), scenarioAdded.getName());
+
+        Scenario scenario = null;
+        if (savedScenario.isPresent()) {
+            scenario = savedScenario.get();
+            scenario.setConditions(conditions);
+            scenario.setActions(actions);
+        } else {
+            scenario = AvroToScenarioMapper.mapToEntity(event.getHubId(), scenarioAdded, conditions, actions);
+        }
         scenarioRepository.save(scenario);
     }
 
