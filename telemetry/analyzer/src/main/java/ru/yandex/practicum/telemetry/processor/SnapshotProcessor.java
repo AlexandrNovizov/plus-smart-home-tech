@@ -6,6 +6,9 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
@@ -13,7 +16,9 @@ import ru.yandex.practicum.telemetry.KafkaConfig;
 import ru.yandex.practicum.telemetry.service.SnapshotService;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -26,6 +31,7 @@ public class SnapshotProcessor implements Runnable {
     private static final Duration CLOSE_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration POLL_TIMEOUT = Duration.ofSeconds(5);
     private static final String SNAPSHOT_TOPIC_KEY = "snapshot";
+    private final Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
 
     public SnapshotProcessor(
             @Qualifier("snapshotConsumer") Consumer<String, SpecificRecordBase> snapshotConsumer,
@@ -50,22 +56,36 @@ public class SnapshotProcessor implements Runnable {
                     try {
                         SensorsSnapshotAvro snapshot = (SensorsSnapshotAvro) record.value();
                         snapshotService.processSnapshot(snapshot);
+                        offsets.put(
+                                new TopicPartition(record.topic(), record.partition()),
+                                new OffsetAndMetadata(record.offset() + 1, "")
+                        );
                     } catch (Exception e) {
                         log.error("Error while working with consumer: {}", e.getMessage());
                     }
                 }
-                snapshotConsumer.commitAsync();
+                if (!records.isEmpty()) {
+                    snapshotConsumer.commitAsync(
+                        offsets,
+                        (commitedOffsets, exception) -> {
+                            if (exception != null) {
+                                log.warn("Error while commiting messages. Offsets: {}", commitedOffsets, exception);
+                            }
+                        });
+                }
             }
 
+        } catch (WakeupException ignored) {
         } catch (Exception e) {
             log.error("Fatal error while working with consumer: {}", e.getMessage());
         } finally {
-            snapshotConsumer.commitSync();
+            snapshotConsumer.commitSync(offsets);
+            snapshotConsumer.close(CLOSE_TIMEOUT);
         }
     }
 
     @PreDestroy
     public void close() {
-        snapshotConsumer.close(CLOSE_TIMEOUT);
+        snapshotConsumer.wakeup();
     }
 }
