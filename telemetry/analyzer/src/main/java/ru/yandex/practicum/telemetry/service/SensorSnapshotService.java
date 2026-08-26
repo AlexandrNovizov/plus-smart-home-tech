@@ -100,7 +100,7 @@ public class SensorSnapshotService implements SnapshotService<SensorsSnapshotAvr
             try {
                 hubRouterClient.handleDeviceAction(request);
             } catch (Exception e) {
-                log.error("Error while sending gRPC action: {}", e.getMessage());
+                throw new RuntimeException("Error while sending gRPC action: " + e.getMessage());
             }
         }
     }
