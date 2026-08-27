@@ -67,6 +67,7 @@ public class SnapshotProcessor implements Runnable {
                     } catch (Exception e) {
                         if (record.offset() != lastOffset) {
                             lastOffset = record.offset();
+                            currentRetry.set(0);
                         }
                         log.error("Error while working with consumer: {}", e.getMessage());
                         if (currentRetry.incrementAndGet() > maxRetries) {
