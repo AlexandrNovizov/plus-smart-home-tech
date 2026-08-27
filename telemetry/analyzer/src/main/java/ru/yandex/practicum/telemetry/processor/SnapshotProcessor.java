@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -32,6 +33,9 @@ public class SnapshotProcessor implements Runnable {
     private static final Duration POLL_TIMEOUT = Duration.ofSeconds(5);
     private static final String SNAPSHOT_TOPIC_KEY = "snapshot";
     private final Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
+    private final int maxRetries = 3;
+    private AtomicInteger currentRetry = new AtomicInteger(0);
+    private long lastOffset = -1;
 
     public SnapshotProcessor(
             @Qualifier("snapshotConsumer") Consumer<String, SpecificRecordBase> snapshotConsumer,
@@ -61,7 +65,19 @@ public class SnapshotProcessor implements Runnable {
                                 new OffsetAndMetadata(record.offset() + 1, "")
                         );
                     } catch (Exception e) {
+                        if (record.offset() != lastOffset) {
+                            lastOffset = record.offset();
+                        }
                         log.error("Error while working with consumer: {}", e.getMessage());
+                        if (currentRetry.incrementAndGet() > maxRetries) {
+                            log.error("Retries limit exceeded to message with offset {}", record.offset());
+                            snapshotConsumer.wakeup();
+                        }
+                        log.error("Setting offset to unprocessed message");
+                        snapshotConsumer.seek(
+                                new TopicPartition(record.topic(), record.partition()),
+                                new OffsetAndMetadata(record.offset(), "")
+                        );
                     }
                 }
                 if (!records.isEmpty()) {
