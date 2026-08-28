@@ -39,13 +39,12 @@ public class AggregationStarter {
     private static final String SENSOR_EVENT_TOPIC_KEY = "sensor.event";
     private static final String SNAPSHOT_EVENT_TOPIC_KEY = "snapshot";
     private final Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
-    private List<Future<RecordMetadata>> sentRecordsFutures;
 
     public void start() {
         try {
             consumer.subscribe(List.of(kafkaConfig.getTopics().getProperty(SENSOR_EVENT_TOPIC_KEY)));
             Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
-            sentRecordsFutures = new ArrayList<>();
+            List<Future<RecordMetadata>> sentRecordsFutures = new ArrayList<>();
             while (true) {
                 ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(POLL_TIMEOUT);
                 for (ConsumerRecord<String, SpecificRecordBase> record : records) {
@@ -71,8 +70,8 @@ public class AggregationStarter {
                 }
                 if (!records.isEmpty()) {
                     try {
-                        for (Future<RecordMetadata> sendedRecord : sentRecordsFutures) {
-                            sendedRecord.get();
+                        for (Future<RecordMetadata> sentRecords : sentRecordsFutures) {
+                            sentRecords.get();
                         }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -88,16 +87,13 @@ public class AggregationStarter {
                             }
                         }
                     );
+                    snapshotService.commitState();
                 }
             }
         } catch (WakeupException ignored) {
-            try {
-                log.info("Commiting offsets");
-                consumer.commitSync(getCompletedSendOffsets(), TIMEOUT);
-            } finally {
-                log.info("Closing consumer");
-                consumer.close(TIMEOUT);
-            }
+            log.info("Closing consumer");
+            consumer.close(TIMEOUT);
+
         } catch (Exception e) {
             log.error("Error while handling events from sensors: ", e);
         } finally {
@@ -105,54 +101,10 @@ public class AggregationStarter {
                 log.info("Flushing data");
                 producer.flush();
             } finally {
+                snapshotService.rollbackState();
                 log.info("Closing producer");
                 producer.close(TIMEOUT);
             }
         }
-    }
-    
-    private Map<TopicPartition, OffsetAndMetadata> getCompletedSendOffsets() {
-        Map<TopicPartition, List<RecordMetadata>> collect = sentRecordsFutures.stream()
-                .filter(this::filterFuture)
-                .map(Future::resultNow)
-                .collect(Collectors.groupingBy(record ->
-                        new TopicPartition(record.topic(), record.partition())));
-
-        return collect.entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        this::getOffsetAndMetadataWithMaxOffset
-                ));
-    }
-
-    private boolean filterFuture(Future<RecordMetadata> future) {
-        switch (future.state()) {
-            case SUCCESS:
-                return true;
-            case RUNNING:
-                future.cancel(true);
-            case CANCELLED:
-            case FAILED:
-                return false;
-            case null, default:
-                throw new IllegalArgumentException(
-                        String.format("Can't handle Future.State.%s value",
-                            (future.state() == null ? null : future.state().name())
-                ));
-        }
-    }
-
-    // entry не должна содержать пустой список
-    private OffsetAndMetadata getOffsetAndMetadataWithMaxOffset(Map.Entry<TopicPartition, List<RecordMetadata>> entry) {
-        Comparator<RecordMetadata> offsetAndMetadataComparator = Comparator
-                .comparingLong(RecordMetadata::offset);
-
-        return entry.getValue().stream()
-                .max(offsetAndMetadataComparator)
-                .map(recordMetadata -> new OffsetAndMetadata(
-                        recordMetadata.offset() + 1, ""
-                ))
-                .get();
     }
 }

@@ -15,6 +15,7 @@ import java.util.Optional;
 public class SnapshotServiceImpl implements SnapshotService {
 
     private final Map<String, SensorsSnapshotAvro> lastSnapshots = new HashMap<>();
+    private final Map<String, SensorsSnapshotAvro> changes = new HashMap<>();
 
     @Override
     public Optional<SensorsSnapshotAvro> updateState(SensorEventAvro event) {
@@ -42,8 +43,19 @@ public class SnapshotServiceImpl implements SnapshotService {
 
         sensorsState.put(event.getId(), sensorState);
         lastHubSnapshot.setTimestamp(event.getTimestamp());
-        lastSnapshots.put(event.getHubId(), lastHubSnapshot);
+        changes.put(event.getHubId(), lastHubSnapshot);
         return Optional.of(lastHubSnapshot);
+    }
+
+    @Override
+    public void commitState() {
+        lastSnapshots.putAll(changes);
+        changes.clear();
+    }
+
+    @Override
+    public void rollbackState() {
+        changes.clear();
     }
 
     private boolean isStateUpToDate(Map<String, SensorStateAvro> sensorsState, SensorEventAvro event) {
