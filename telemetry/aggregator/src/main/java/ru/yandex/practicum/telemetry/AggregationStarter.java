@@ -84,10 +84,11 @@ public class AggregationStarter {
                         (commitedOffsets, exception) -> {
                             if (exception != null) {
                                 log.warn("Error while commiting messages. Offsets: {}", commitedOffsets, exception);
+                            } else {
+                                snapshotService.commitState();
                             }
                         }
                     );
-                    snapshotService.commitState();
                 }
             }
         } catch (WakeupException ignored) {
