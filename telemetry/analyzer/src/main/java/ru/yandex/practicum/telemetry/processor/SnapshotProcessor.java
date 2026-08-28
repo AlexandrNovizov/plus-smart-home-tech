@@ -79,6 +79,7 @@ public class SnapshotProcessor implements Runnable {
                                 new TopicPartition(record.topic(), record.partition()),
                                 new OffsetAndMetadata(record.offset(), "")
                         );
+                        break;
                     }
                 }
                 if (!records.isEmpty()) {
