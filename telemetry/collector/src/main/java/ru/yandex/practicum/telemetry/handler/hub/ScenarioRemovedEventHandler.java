@@ -1,10 +1,9 @@
 package ru.yandex.practicum.telemetry.handler.hub;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.ScenarioRemovedEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.ScenarioRemovedEventAvro;
-import ru.yandex.practicum.telemetry.dto.event.hub.HubEvent;
-import ru.yandex.practicum.telemetry.dto.event.hub.HubEventType;
-import ru.yandex.practicum.telemetry.dto.event.hub.ScenarioRemovedEvent;
 import ru.yandex.practicum.telemetry.kafka.KafkaEventProducer;
 
 @Component
@@ -15,20 +14,17 @@ public class ScenarioRemovedEventHandler extends BaseHubEventHandler<ScenarioRem
     }
 
     @Override
-    public ScenarioRemovedEventAvro mapToAvro(HubEvent event) {
-        if (!(event instanceof ScenarioRemovedEvent)) {
-            throw new IllegalArgumentException(String.format("Can't map %s to ScenarioRemovedEvent", event.getType().name()));
-        }
+    protected ScenarioRemovedEventAvro mapToAvro(HubEventProto event) {
 
-        ScenarioRemovedEvent scenarioRemovedEvent = (ScenarioRemovedEvent) event;
+        ScenarioRemovedEventProto scenarioRemoved = event.getScenarioRemoved();
 
         return ScenarioRemovedEventAvro.newBuilder()
-                .setName(scenarioRemovedEvent.getName())
+                .setName(scenarioRemoved.getName())
                 .build();
     }
 
     @Override
-    public HubEventType getType() {
-        return HubEventType.SCENARIO_REMOVED;
+    public HubEventProto.PayloadCase getType() {
+        return HubEventProto.PayloadCase.SCENARIO_REMOVED;
     }
 }

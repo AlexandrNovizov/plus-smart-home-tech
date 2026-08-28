@@ -1,11 +1,10 @@
 package ru.yandex.practicum.telemetry.handler.sensor;
 
-import ru.yandex.practicum.telemetry.dto.event.sensor.SensorEvent;
-import ru.yandex.practicum.telemetry.dto.event.sensor.SensorEventType;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 
 public interface SensorEventHandler {
 
-    SensorEventType getType();
+    SensorEventProto.PayloadCase getType();
 
-    void handle(SensorEvent event);
+    void handle(SensorEventProto event);
 }

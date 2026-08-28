@@ -1,33 +1,73 @@
 package ru.yandex.practicum.telemetry.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.telemetry.dto.event.hub.HubEvent;
-import ru.yandex.practicum.telemetry.dto.event.sensor.SensorEvent;
-import ru.yandex.practicum.telemetry.service.HubEventService;
-import ru.yandex.practicum.telemetry.service.SensorEventService;
+import com.google.protobuf.Empty;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
+import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
+import ru.yandex.practicum.telemetry.handler.hub.HubEventHandler;
+import ru.yandex.practicum.telemetry.handler.sensor.SensorEventHandler;
 
-@RestController
-@Validated
-@RequiredArgsConstructor
-@RequestMapping("/events")
-public class CollectorController {
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-    private final SensorEventService sensorEventService;
-    private final HubEventService hubEventService;
+@GrpcService
+public class CollectorController extends CollectorControllerGrpc.CollectorControllerImplBase {
 
-    @PostMapping("/sensors")
-    public void collectSensorEvent(@Valid @RequestBody SensorEvent event) {
-        sensorEventService.send(event);
+
+    private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorHandlers;
+    private final Map<HubEventProto.PayloadCase, HubEventHandler> hubHandlers;
+
+    public CollectorController(List<SensorEventHandler> sensorEventHandlerList, List<HubEventHandler> hubEventHandlerList) {
+        sensorHandlers = sensorEventHandlerList.stream()
+                .collect(Collectors.toMap(SensorEventHandler::getType, Function.identity()));
+
+        hubHandlers = hubEventHandlerList.stream()
+                .collect(Collectors.toMap(HubEventHandler::getType, Function.identity()));
     }
 
-    @PostMapping("/hubs")
-    public void collectHubEvent(@Valid @RequestBody HubEvent event) {
-        hubEventService.send(event);
+    @Override
+    public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
+        try {
+            if (!sensorHandlers.containsKey(request.getPayloadCase())) {
+                throw new IllegalArgumentException("Can't find handler for event " + request.getPayloadCase().name());
+            }
+
+            sensorHandlers.get(request.getPayloadCase()).handle(request);
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusRuntimeException(
+                    Status.INTERNAL
+                            .withDescription(e.getLocalizedMessage())
+                            .withCause(e)
+            ));
+        }
+    }
+
+    @Override
+    public void collectHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver) {
+        try {
+            if (!hubHandlers.containsKey(request.getPayloadCase())) {
+                throw new IllegalArgumentException("Can't find handler for event " + request.getPayloadCase().name());
+            }
+
+            hubHandlers.get(request.getPayloadCase()).handle(request);
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusRuntimeException(
+                    Status.INTERNAL
+                            .withDescription(e.getLocalizedMessage())
+                            .withCause(e)
+            ));
+        }
     }
 }

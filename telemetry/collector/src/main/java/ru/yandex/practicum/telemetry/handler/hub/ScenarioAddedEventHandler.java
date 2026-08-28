@@ -1,14 +1,12 @@
 package ru.yandex.practicum.telemetry.handler.hub;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.ScenarioAddedEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceActionAvro;
 import ru.yandex.practicum.kafka.telemetry.event.ScenarioAddedEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.ScenarioConditionAvro;
-import ru.yandex.practicum.telemetry.dto.device.mapper.DeviceActionMapper;
-import ru.yandex.practicum.telemetry.dto.device.mapper.ScenarioConditionMapper;
-import ru.yandex.practicum.telemetry.dto.event.hub.HubEvent;
-import ru.yandex.practicum.telemetry.dto.event.hub.HubEventType;
-import ru.yandex.practicum.telemetry.dto.event.hub.ScenarioAddedEvent;
+import ru.yandex.practicum.telemetry.handler.mapper.ProtoToAvroMapper;
 import ru.yandex.practicum.telemetry.kafka.KafkaEventProducer;
 
 import java.util.List;
@@ -21,30 +19,28 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAdded
     }
 
     @Override
-    public ScenarioAddedEventAvro mapToAvro(HubEvent event) {
-        if (!(event instanceof ScenarioAddedEvent)) {
-            throw new IllegalArgumentException(String.format("Can't map %s to ScenarioAddedEvent", event.getType().name()));
-        }
+    protected ScenarioAddedEventAvro mapToAvro(HubEventProto event) {
 
-        ScenarioAddedEvent scenarioAddedEvent = (ScenarioAddedEvent) event;
+        ScenarioAddedEventProto scenarioAdded = event.getScenarioAdded();
 
-        List<DeviceActionAvro> actions = scenarioAddedEvent.getActions().stream()
-                .map(DeviceActionMapper::mapToRecord)
+        List<ScenarioConditionAvro> conditions = scenarioAdded.getConditionsList().stream()
+                .map(ProtoToAvroMapper::toAvro)
                 .toList();
 
-        List<ScenarioConditionAvro> conditions = scenarioAddedEvent.getConditions().stream()
-                .map(ScenarioConditionMapper::mapToRecord)
+        List<DeviceActionAvro> actions = scenarioAdded.getActionsList().stream()
+                .map(ProtoToAvroMapper::toAvro)
                 .toList();
+
 
         return ScenarioAddedEventAvro.newBuilder()
-                .setName(scenarioAddedEvent.getName())
-                .setActions(actions)
+                .setName(scenarioAdded.getName())
                 .setConditions(conditions)
+                .setActions(actions)
                 .build();
     }
 
     @Override
-    public HubEventType getType() {
-        return HubEventType.SCENARIO_ADDED;
+    public HubEventProto.PayloadCase getType() {
+        return HubEventProto.PayloadCase.SCENARIO_ADDED;
     }
 }
