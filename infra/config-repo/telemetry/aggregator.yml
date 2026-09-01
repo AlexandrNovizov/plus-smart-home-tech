@@ -1,14 +1,13 @@
-spring:
-  kafka:
-    producer:
-      "key.serializer": "org.apache.kafka.common.serialization.StringSerializer"
-      "value.serializer": "ru.yandex.practicum.telemetry.kafka.EventSerializer"
-    consumer:
-      "key.deserializer": "org.apache.kafka.common.serialization.StringDeserializer"
-      "value.deserializer": "ru.yandex.practicum.telemetry.kafka.SensorEventDeserializer"
-      "group.id": 'aggregator-1'
-      "enable.auto.commit": "false"
-      "poll-timeout": "100ms"
-    topics:
-      "sensor.event": '${SENSOR_EVENT_TOPIC:telemetry.sensors.v1}'
-      "snapshot": '${SNAPSHOT_TOPIC:telemetry.snapshots.v1}'
+kafka:
+  producer:
+    "key.serializer": "org.apache.kafka.common.serialization.StringSerializer"
+    "value.serializer": "ru.yandex.practicum.telemetry.kafka.EventSerializer"
+  consumer:
+    "key.deserializer": "org.apache.kafka.common.serialization.StringDeserializer"
+    "value.deserializer": "ru.yandex.practicum.telemetry.kafka.SensorEventDeserializer"
+    "group.id": 'aggregator-1'
+    "enable.auto.commit": "false"
+    "poll-timeout": "100ms"
+  topics:
+    "sensor.event": '${SENSOR_EVENT_TOPIC:telemetry.sensors.v1}'
+    "snapshot": '${SNAPSHOT_TOPIC:telemetry.snapshots.v1}'

@@ -8,7 +8,7 @@ import java.util.Properties;
 
 @Getter
 @AllArgsConstructor
-@ConfigurationProperties("spring.kafka")
+@ConfigurationProperties("kafka")
 public class KafkaConfig {
 
     private String bootstrapServers;
