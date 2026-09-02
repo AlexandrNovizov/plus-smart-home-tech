@@ -43,6 +43,13 @@ public class GlobalExceptionHandler {
                 "Конфликт конкурентного доступа. Данные были изменены другим запросом. Повторите операцию.");
     }
 
+    @ExceptionHandler(RecordAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleRecordAlreadyExists(RecordAlreadyExistsException e) {
+        log.warn("Инвентарная запись уже существует: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException e) {
