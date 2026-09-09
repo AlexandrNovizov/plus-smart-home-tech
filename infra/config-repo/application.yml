@@ -3,6 +3,23 @@ spring:
     banner-mode: off
     log-startup-info: false
 
+  jpa:
+    show_sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+
+  datasource:
+    driverClassName: org.postgresql.Driver
+    username: dbuser
+    password: 12345
+
 logging:
   level:
     ru.yandex.practicum.telemetry: WARN

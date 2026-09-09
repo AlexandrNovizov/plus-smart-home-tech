@@ -2,6 +2,7 @@ package ru.yandex.practicum.inventory.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.inventory.dto.InventoryDto;
 import ru.yandex.practicum.inventory.dto.ReserveRequest;
 import ru.yandex.practicum.inventory.dto.ReserveResponse;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class InventoryServiceImpl implements InventoryService {
 
     private final InventoryRepository inventoryRepository;
@@ -25,16 +27,13 @@ public class InventoryServiceImpl implements InventoryService {
     public List<InventoryDto> getAll() {
         List<Inventory> records = inventoryRepository.findAll();
 
-        if (records.isEmpty()) {
-            throw new NotFoundException("Инвентарные записи не найдены");
-        }
-
         return records.stream()
                 .map(InventoryMapper::mapToDto)
                 .toList();
     }
 
     @Override
+    @Transactional
     public InventoryDto update(UpdateInventoryRequest request) {
 
         Inventory record = inventoryRepository.findByProductId(request.productId()).orElseThrow(
@@ -49,6 +48,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Transactional
     public InventoryDto create(UpdateInventoryRequest request) {
         if (inventoryRepository.existsByProductId(request.productId())) {
             throw new RecordAlreadyExistsException(String.format(
@@ -64,6 +64,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Transactional
     public ReserveResponse reserve(ReserveRequest request) {
         Inventory record = inventoryRepository.findByProductId(request.productId()).orElseThrow(
                 () -> new NotFoundException(
@@ -71,7 +72,7 @@ public class InventoryServiceImpl implements InventoryService {
                 )
         );
 
-        int totalReserved = record.getAvailableQuantity() + request.quantity();
+        int totalReserved = record.getReservedQuantity() + request.quantity();
 
         if (record.getAvailableQuantity() < request.quantity()) {
             throw new InsufficientStockException(String.format(

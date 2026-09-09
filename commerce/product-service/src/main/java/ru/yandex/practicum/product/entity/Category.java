@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Entity
-@Table(name = "category")
+@Table(name = "categories")
 @EqualsAndHashCode(of = "id")
 @Data
 public class Category {

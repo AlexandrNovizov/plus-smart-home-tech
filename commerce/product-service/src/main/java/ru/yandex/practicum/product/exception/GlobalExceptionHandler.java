@@ -33,6 +33,13 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Ошибка валидации", errors);
     }
 
+    @ExceptionHandler(DataAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleDataAlreadyExists(DataAlreadyExistsException e) {
+        log.warn("Данные уже существуют: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.CONFLICT.value(), "Конфликт данных: %s".formatted(e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGeneral(Exception e) {

@@ -11,11 +11,14 @@ import ru.yandex.practicum.product.entity.Product;
 public class ProductMapper {
 
     public static ProductDto mapToDto(Product entity) {
-        CategoryDto categoryDto = new CategoryDto(
-                entity.getCategory().getId(),
-                entity.getCategory().getName(),
-                entity.getCategory().getDescription()
-        );
+        CategoryDto categoryDto = null;
+        if (entity.getCategory() != null) {
+            categoryDto = new CategoryDto(
+                    entity.getCategory().getId(),
+                    entity.getCategory().getName(),
+                    entity.getCategory().getDescription()
+            );
+        }
 
         return new ProductDto(
                 entity.getId(),

@@ -1,5 +1,0 @@
-spring:
-  application:
-    name: analyzer
-  config:
-    import: configserver:http://localhost:8888

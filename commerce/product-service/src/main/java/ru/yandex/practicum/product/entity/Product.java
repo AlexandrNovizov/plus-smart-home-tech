@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "product")
+@Table(name = "products")
 @EqualsAndHashCode(of = "id")
 @Data
 public class Product {
@@ -28,6 +28,7 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Column(name = "image_url")
     private String imageUrl;
 
     private Boolean active = true;

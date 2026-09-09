@@ -2,11 +2,13 @@ package ru.yandex.practicum.product.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.product.dto.CreateProductRequest;
 import ru.yandex.practicum.product.dto.ProductDto;
 import ru.yandex.practicum.product.dto.UpdateProductRequest;
 import ru.yandex.practicum.product.entity.Category;
 import ru.yandex.practicum.product.entity.Product;
+import ru.yandex.practicum.product.exception.DataAlreadyExistsException;
 import ru.yandex.practicum.product.exception.NotFoundException;
 import ru.yandex.practicum.product.mapper.ProductMapper;
 import ru.yandex.practicum.product.repository.CategoryRepository;
@@ -16,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
@@ -25,21 +28,25 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDto> getActive() {
         List<Product> products = productRepository.findByActiveTrue();
 
-        if (products.isEmpty()) {
-            throw new NotFoundException("Товары не найдены");
-        }
-
         return products.stream()
                 .map(ProductMapper::mapToDto)
                 .toList();
     }
 
     @Override
+    @Transactional
     public ProductDto create(CreateProductRequest request) {
 
-        Category category = categoryRepository.findById(request.categoryId()).orElseThrow(
-                () -> new NotFoundException(String.format("Категория с id=%d не найдена", request.categoryId()))
-        );
+        Category category = null;
+        if (request.categoryId() != null) {
+            category = categoryRepository.findById(request.categoryId()).orElseThrow(
+                    () -> new NotFoundException(String.format("Категория с id=%d не найдена", request.categoryId()))
+            );
+        }
+
+        if (productRepository.existsByName(request.name())) {
+            throw new DataAlreadyExistsException("Товар с названием '%s' уже существует".formatted(request.name()));
+        }
 
         Product product = ProductMapper.mapToEntity(request, category);
 
@@ -59,6 +66,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductDto update(Long productId, UpdateProductRequest request) {
 
         Category category = null;
@@ -71,6 +79,10 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId).orElseThrow(
                 () -> new NotFoundException(String.format("Товар с id=%d не найден", productId))
         );
+
+        if (productRepository.existsByName(request.name())) {
+            throw new DataAlreadyExistsException("Товар с названием '%s' уже существует".formatted(request.name()));
+        }
 
         setFields(product, request, category);
         productRepository.save(product);
@@ -93,10 +105,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductDto> getByCategory(Long categoryId) {
         List<Product> products = productRepository.findByCategoryId(categoryId);
-
-        if (products.isEmpty()) {
-            throw new NotFoundException("Товары не найдены");
-        }
 
         return products.stream()
                 .map(ProductMapper::mapToDto)
