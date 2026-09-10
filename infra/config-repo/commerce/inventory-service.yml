@@ -2,5 +2,20 @@ server:
   port: 52181
 
 spring:
+  jpa:
+    show_sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+
   datasource:
+    driverClassName: org.postgresql.Driver
+    username: dbuser
+    password: 12345
     url: jdbc:postgresql://localhost:5432/inventory_db

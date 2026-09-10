@@ -80,7 +80,7 @@ public class ProductServiceImpl implements ProductService {
                 () -> new NotFoundException(String.format("Товар с id=%d не найден", productId))
         );
 
-        if (productRepository.existsByName(request.name())) {
+        if (!product.getName().equals(request.name()) && productRepository.existsByName(request.name())) {
             throw new DataAlreadyExistsException("Товар с названием '%s' уже существует".formatted(request.name()));
         }
 

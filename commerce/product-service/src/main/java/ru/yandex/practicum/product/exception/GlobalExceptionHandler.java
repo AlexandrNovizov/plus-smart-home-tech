@@ -3,10 +3,13 @@ package ru.yandex.practicum.product.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.method.MethodValidationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +41,16 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleDataAlreadyExists(DataAlreadyExistsException e) {
         log.warn("Данные уже существуют: {}", e.getMessage());
         return new ErrorResponse(HttpStatus.CONFLICT.value(), "Конфликт данных: %s".formatted(e.getMessage()));
+    }
+
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class,
+            MethodValidationException.class
+    })
+    public ErrorResponse handleBadRequest(Exception e) {
+        log.warn("Некорректный запрос", e);
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Некорректный запрос");
     }
 
     @ExceptionHandler(Exception.class)
