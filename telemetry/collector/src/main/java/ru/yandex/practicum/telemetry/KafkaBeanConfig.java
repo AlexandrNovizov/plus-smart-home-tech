@@ -8,6 +8,8 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Properties;
+
 @Configuration
 @RequiredArgsConstructor
 public class KafkaBeanConfig {
@@ -16,6 +18,8 @@ public class KafkaBeanConfig {
 
     @Bean
     public Producer<String, SpecificRecordBase> producer() {
-        return new KafkaProducer<>(kafkaConfig.getProperties());
+        Properties properties = kafkaConfig.getProperties();
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
+        return new KafkaProducer<>(properties);
     }
 }

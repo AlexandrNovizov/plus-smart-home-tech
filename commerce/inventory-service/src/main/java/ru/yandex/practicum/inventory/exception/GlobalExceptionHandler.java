@@ -3,11 +3,14 @@ package ru.yandex.practicum.inventory.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.method.MethodValidationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +46,13 @@ public class GlobalExceptionHandler {
                 "Конфликт конкурентного доступа. Данные были изменены другим запросом. Повторите операцию.");
     }
 
+    @ExceptionHandler(RecordAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleRecordAlreadyExists(RecordAlreadyExistsException e) {
+        log.warn("Инвентарная запись уже существует: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException e) {
@@ -58,6 +68,17 @@ public class GlobalExceptionHandler {
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         log.warn("Ошибка валидации: {}", errors);
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Ошибка валидации", errors);
+    }
+
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class,
+            MethodValidationException.class
+    })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequest(Exception e) {
+        log.warn("Некорректный запрос", e);
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Некорректный запрос");
     }
 
     @ExceptionHandler(Exception.class)

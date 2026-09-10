@@ -1,6 +1,5 @@
 kafka:
   properties:
-    "bootstrap.servers": "localhost:9092"
     "key.serializer": "org.apache.kafka.common.serialization.StringSerializer"
     "value.serializer": "ru.yandex.practicum.telemetry.kafka.EventSerializer"
 

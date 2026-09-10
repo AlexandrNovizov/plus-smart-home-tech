@@ -3,9 +3,12 @@ package ru.yandex.practicum.telemetry;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Properties;
 
 @Configuration
 @RequiredArgsConstructor
@@ -15,11 +18,15 @@ public class KafkaBeanConfig {
 
     @Bean(name = "snapshotConsumer")
     public Consumer<String, SpecificRecordBase> snapshotConsumer() {
-        return new KafkaConsumer<>(kafkaConfig.getSnapshots());
+        Properties properties = kafkaConfig.getSnapshots();
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
+        return new KafkaConsumer<>(properties);
     }
 
     @Bean(name = "hubConsumer")
     public Consumer<String, SpecificRecordBase> hubConsumer() {
-        return new KafkaConsumer<>(kafkaConfig.getHub());
+        Properties properties = kafkaConfig.getHub();
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
+        return new KafkaConsumer<>(properties);
     }
 }

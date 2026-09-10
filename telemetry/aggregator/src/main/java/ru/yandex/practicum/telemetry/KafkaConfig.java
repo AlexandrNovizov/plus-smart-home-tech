@@ -11,6 +11,7 @@ import java.util.Properties;
 @ConfigurationProperties("kafka")
 public class KafkaConfig {
 
+    private String bootstrapServers;
     private Properties producer;
     private Properties consumer;
     private Properties topics;
