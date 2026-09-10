@@ -48,6 +48,7 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException.class,
             MethodValidationException.class
     })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(Exception e) {
         log.warn("Некорректный запрос", e);
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Некорректный запрос");
