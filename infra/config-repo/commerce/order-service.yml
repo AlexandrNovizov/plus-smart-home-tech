@@ -19,3 +19,16 @@ spring:
     username: dbuser
     password: 12345
     url: jdbc:postgresql://localhost:5432/order_db
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 2000
+            readTimeout: 3000
+            loggerLevel: basic
+
+logging:
+  level:
+    ru.yandex.practicum.order.feign.InventoryClient: DEBUG

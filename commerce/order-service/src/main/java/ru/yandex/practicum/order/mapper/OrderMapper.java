@@ -2,16 +2,27 @@ package ru.yandex.practicum.order.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.yandex.practicum.order.dto.CreateOrderRequest;
+import ru.yandex.practicum.order.dto.OrderData;
 import ru.yandex.practicum.order.dto.OrderDto;
 import ru.yandex.practicum.order.dto.OrderItemDto;
 import ru.yandex.practicum.order.entity.Item;
 import ru.yandex.practicum.order.entity.Order;
+import ru.yandex.practicum.order.feign.dto.ProductDto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @UtilityClass
 public class OrderMapper {
+
+    public static OrderData mapToOrderData(CreateOrderRequest request, List<OrderItemDto> items) {
+        return new OrderData(
+                request.customerName(),
+                request.customerEmail(),
+                items
+        );
+    }
 
     public static OrderDto mapToDto(Order entity) {
 
@@ -31,14 +42,14 @@ public class OrderMapper {
         );
     }
 
-    public static Order mapToEntity(CreateOrderRequest request) {
+    public static Order mapToEntity(OrderData data) {
         Order entity = new Order();
 
-        entity.setCustomerEmail(request.customerEmail());
-        entity.setCustomerName(request.customerName());
-        entity.setStatus("CREATED");
+        entity.setCustomerEmail(data.customerEmail());
+        entity.setCustomerName(data.customerName());
+        entity.setStatus("CONFIRMED");
 
-        List<Item> items = request.items().stream()
+        List<Item> items = data.items().stream()
                 .map(ItemMapper::mapToEntity)
                 .toList();
 

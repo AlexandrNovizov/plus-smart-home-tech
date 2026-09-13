@@ -36,6 +36,13 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Ошибка валидации", errors);
     }
 
+    @ExceptionHandler(OrderProcessingException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorResponse handleOrderProcessingException(OrderProcessingException e) {
+        log.warn("Ошибка при обработке заказа: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage());
+    }
+
     @ExceptionHandler({
             MethodArgumentTypeMismatchException.class,
             HttpMessageNotReadableException.class,

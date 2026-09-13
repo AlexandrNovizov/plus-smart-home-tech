@@ -4,13 +4,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.order.dto.CreateOrderRequest;
+import ru.yandex.practicum.order.dto.OrderData;
 import ru.yandex.practicum.order.dto.OrderDto;
+import ru.yandex.practicum.order.dto.OrderItemRequest;
 import ru.yandex.practicum.order.entity.Order;
 import ru.yandex.practicum.order.exception.NotFoundException;
+import ru.yandex.practicum.order.feign.InventoryClient;
+import ru.yandex.practicum.order.feign.ProductClient;
+import ru.yandex.practicum.order.feign.dto.ProductDto;
+import ru.yandex.practicum.order.feign.dto.ReserveRequest;
+import ru.yandex.practicum.order.feign.dto.ReserveResponse;
 import ru.yandex.practicum.order.mapper.OrderMapper;
 import ru.yandex.practicum.order.repository.OrderRepository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +40,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDto create(CreateOrderRequest request) {
-        Order order = OrderMapper.mapToEntity(request);
+    public OrderDto create(OrderData data) {
+
+        Order order = OrderMapper.mapToEntity(data);
 
         order = orderRepository.save(order);
 
