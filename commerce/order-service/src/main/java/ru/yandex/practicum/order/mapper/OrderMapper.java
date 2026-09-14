@@ -16,11 +16,16 @@ import java.util.Map;
 @UtilityClass
 public class OrderMapper {
 
-    public static OrderData mapToOrderData(CreateOrderRequest request, List<OrderItemDto> items) {
+    public static OrderData mapToOrderData(CreateOrderRequest request,
+                                           List<OrderItemDto> items,
+                                           boolean hasAllData,
+                                           String statusDetails) {
         return new OrderData(
                 request.customerName(),
                 request.customerEmail(),
-                items
+                items,
+                hasAllData,
+                statusDetails
         );
     }
 
@@ -47,7 +52,12 @@ public class OrderMapper {
 
         entity.setCustomerEmail(data.customerEmail());
         entity.setCustomerName(data.customerName());
-        entity.setStatus("CONFIRMED");
+        if (data.hasAllData()) {
+            entity.setStatus("CONFIRMED");
+        } else {
+            entity.setStatus("PENDING_CONFIRMATION");
+        }
+        entity.setStatusDetails(data.statusDetails());
 
         List<Item> items = data.items().stream()
                 .map(ItemMapper::mapToEntity)

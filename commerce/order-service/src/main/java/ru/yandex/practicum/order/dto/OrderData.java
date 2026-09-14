@@ -5,6 +5,8 @@ import java.util.List;
 public record OrderData(
         String customerName,
         String customerEmail,
-        List<OrderItemDto> items
+        List<OrderItemDto> items,
+        boolean hasAllData,
+        String statusDetails
 ) {
 }

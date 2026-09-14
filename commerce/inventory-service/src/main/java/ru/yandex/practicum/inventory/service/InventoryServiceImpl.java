@@ -86,6 +86,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Transactional
     public ReleaseResponse release(ReleaseRequest request) {
         Inventory record = inventoryRepository.findByProductId(request.productId()).orElseThrow(
                 () -> new NotFoundException(
@@ -101,7 +102,7 @@ public class InventoryServiceImpl implements InventoryService {
         }
         record.setReservedQuantity(record.getReservedQuantity() - request.quantity());
         record.setAvailableQuantity(record.getAvailableQuantity() + request.quantity());
-        inventoryRepository.save(record);
+        inventoryRepository.saveAndFlush(record);
 
         return new ReleaseResponse(true, record.getAvailableQuantity(), "Товар успешно снят");
     }
