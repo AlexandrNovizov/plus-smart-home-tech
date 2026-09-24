@@ -102,3 +102,16 @@ spring:
               - Location
             allow-credentials: true
             max-age: 3600
+
+app:
+  security:
+    users:
+      - login: ivan
+        password: ivan
+        roles:
+          - USER
+      - login: anna
+        password: anna
+        roles:
+          - USER
+          - ADMIN
