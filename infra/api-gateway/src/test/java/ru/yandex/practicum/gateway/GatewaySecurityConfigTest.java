@@ -7,14 +7,17 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import ru.yandex.practicum.gateway.config.UserSecurityConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.path;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -124,9 +127,14 @@ class GatewaySecurityConfigTest {
     @Test
     void corsPreflight_isPublic() {
         webTestClient.options()
-                .uri("/api/orders")
+                .uri("http://localhost:8443/api/orders")
+                .header(AUTHORIZATION_HEADER, basic(USER, USER_PASS))
+                .header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "authorization, content-type")
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isOk()
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000");
     }
 
     @Test

@@ -1,6 +1,7 @@
-package ru.yandex.practicum.gateway;
+package ru.yandex.practicum.gateway.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.gateway.config.GlobalCorsProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +12,8 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -22,6 +25,7 @@ public class GatewaySecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
+                .cors(Customizer.withDefaults())
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.GET,
@@ -39,7 +43,6 @@ public class GatewaySecurityConfig {
                 )
                 .httpBasic(Customizer.withDefaults())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(Customizer.withDefaults())
                 .build();
     }
 
@@ -56,6 +59,14 @@ public class GatewaySecurityConfig {
                 .toArray(UserDetails[]::new);
 
         return new MapReactiveUserDetailsService(users);
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(GlobalCorsProperties globalCorsProperties) {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        globalCorsProperties.getCorsConfigurations()
+                .forEach(source::registerCorsConfiguration);
+        return source;
     }
 
     private UserDetails toUserDetails(UserSecurityConfig.UserConfig config, PasswordEncoder passwordEncoder) {
