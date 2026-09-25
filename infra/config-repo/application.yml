@@ -5,7 +5,7 @@ spring:
 
 logging:
   level:
-    ru.yandex.practicum.telemetry: WARN
+    ru.yandex.practicum: TRACE
     org:
       springframework: ERROR
       apache.kafka: WARN
@@ -13,7 +13,15 @@ logging:
 kafka:
   bootstrap-servers: "localhost:9092"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    instance-id: ${spring.application.name}:${server.port}:${random.value}

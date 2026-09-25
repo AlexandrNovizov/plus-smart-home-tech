@@ -3,12 +3,10 @@ package ru.yandex.practicum.inventory.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.inventory.dto.InventoryDto;
-import ru.yandex.practicum.inventory.dto.ReserveRequest;
-import ru.yandex.practicum.inventory.dto.ReserveResponse;
-import ru.yandex.practicum.inventory.dto.UpdateInventoryRequest;
+import ru.yandex.practicum.inventory.dto.*;
 import ru.yandex.practicum.inventory.entity.Inventory;
 import ru.yandex.practicum.inventory.exception.InsufficientStockException;
+import ru.yandex.practicum.inventory.exception.NotEnoughReservedException;
 import ru.yandex.practicum.inventory.exception.NotFoundException;
 import ru.yandex.practicum.inventory.exception.RecordAlreadyExistsException;
 import ru.yandex.practicum.inventory.mapper.InventoryMapper;
@@ -75,7 +73,7 @@ public class InventoryServiceImpl implements InventoryService {
         int totalReserved = record.getReservedQuantity() + request.quantity();
 
         if (record.getAvailableQuantity() < request.quantity()) {
-            throw new InsufficientStockException(String.format(
+            throw new NotEnoughReservedException(String.format(
                     "Недостаточно товара для резервирования, есть: %d, надо: %d",
                     record.getAvailableQuantity(), totalReserved
             ));
@@ -85,6 +83,28 @@ public class InventoryServiceImpl implements InventoryService {
         record.setAvailableQuantity(record.getAvailableQuantity() - request.quantity());
         inventoryRepository.save(record);
         return new ReserveResponse(true, record.getAvailableQuantity(), "Товар успешно зарезервирован");
+    }
+
+    @Override
+    @Transactional
+    public ReleaseResponse release(ReleaseRequest request) {
+        Inventory record = inventoryRepository.findByProductId(request.productId()).orElseThrow(
+                () -> new NotFoundException(
+                        String.format("Инвентарная запись с id товара '%d' не найдена", request.productId())
+                )
+        );
+
+        if (record.getReservedQuantity() < request.quantity()) {
+            throw new InsufficientStockException(String.format(
+                    "Недостаточно товара для снятия, зарезервировано: %d, надо: %d",
+                    record.getReservedQuantity(), request.quantity())
+            );
+        }
+        record.setReservedQuantity(record.getReservedQuantity() - request.quantity());
+        record.setAvailableQuantity(record.getAvailableQuantity() + request.quantity());
+        inventoryRepository.saveAndFlush(record);
+
+        return new ReleaseResponse(true, record.getAvailableQuantity(), "Товар успешно снят");
     }
 
     @Override
